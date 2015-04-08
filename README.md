@@ -26,6 +26,7 @@ bedrock-ansible will configure a server with the following and more:
 * WP-CLI
 * Fail2ban
 * ferm
+* SSL support (optional)
 
 ## Requirements
 
@@ -80,6 +81,10 @@ In the environment files inside the `group_vars` directory, `wordpress_sites` is
 
 * `site_hosts` - hosts that Nginx will listen on
 * `local_path` - path targeting Bedrock-based site directory
+* `ssl` - enable SSL and set paths
+  * `enabled` - `true` or `false`
+  * `key` - local relative path to private key
+  * `cert` - local relative path to certificate
 * `env` - environment variables
   * `wp_home` - `WP_HOME` constant
   * `wp_siteurl` - `WP_SITEURL` constant

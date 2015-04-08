@@ -6,10 +6,14 @@ wordpress_sites:
       - example.com
       - 192.168.50.5
     repo: git@github.com:roots/bedrock.git
-    system_cron: true
     multisite:
       enabled: false
       subdomains: false
+    ssl:
+     enabled: false
+     # cert: local relative path to crt file
+     # key: local relative path to key file
+    system_cron: true
     env:
       wp_home: http://example.com
       wp_siteurl: http://example.com/wp
