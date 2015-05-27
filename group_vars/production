@@ -4,13 +4,15 @@ wordpress_sites:
   example.com:
     site_hosts:
       - example.com
-      - 192.168.50.5
-    local_path: '../example.com' # path targeting local Bedrock project directory (relative to Ansible root)
+    local_path: '../site' # path targeting local Bedrock site directory (relative to Ansible root)
     repo: git@github.com:roots/bedrock.git
-    system_cron: true
+    branch: master
     multisite:
       enabled: false
       subdomains: false
+    ssl:
+      enabled: false
+    system_cron: true
     env:
       wp_home: http://example.com
       wp_siteurl: http://example.com/wp
@@ -18,6 +20,7 @@ wordpress_sites:
       db_name: example_prod
       db_user: example_dbuser
       db_password: example_dbpassword
+      # Generate your keys here: https://api.wordpress.org/secret-key/1.1/salt/
       auth_key: "generateme"
       auth_salt: "generateme"
       logged_in_key: "generateme"

@@ -1,6 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Specify Vagrant provider as Virtualbox
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
+
 require 'yaml'
 
 ANSIBLE_PATH = '.' # path targeting Ansible directory (relative to Vagrantfile)
@@ -38,7 +41,7 @@ Vagrant.configure('2') do |config|
 
   if Vagrant::Util::Platform.windows?
     wordpress_sites.each do |(name, site)|
-      config.vm.synced_folder site['local_path'], remote_site_path(name), owner: 'vagrant', group: 'www-data', mount_options: ['dmode=776', 'fmode=775']
+      config.vm.synced_folder local_site_path(site), remote_site_path(name), owner: 'vagrant', group: 'www-data', mount_options: ['dmode=776', 'fmode=775']
     end
   else
     if !Vagrant.has_plugin? 'vagrant-bindfs'
@@ -46,19 +49,30 @@ Vagrant.configure('2') do |config|
         "vagrant-bindfs missing, please install the plugin:\nvagrant plugin install vagrant-bindfs"
     else
       wordpress_sites.each do |(name, site)|
-        config.vm.synced_folder site['local_path'], nfs_path(name), type: 'nfs'
+        config.vm.synced_folder local_site_path(site), nfs_path(name), type: 'nfs'
         config.bindfs.bind_folder nfs_path(name), remote_site_path(name), u: 'vagrant', g: 'www-data'
       end
     end
   end
 
-  config.vm.provision :ansible do |ansible|
-    ansible.playbook = File.join(ANSIBLE_PATH, 'dev.yml')
-    ansible.groups = {
-      'web' => ['default'],
-      'development' => ['default']
-    }
-    ansible.extra_vars = { ansible_ssh_user: 'vagrant' }
+  if Vagrant::Util::Platform.windows?
+    config.vm.provision :shell do |sh|
+      sh.path = File.join(ANSIBLE_PATH, 'windows.sh')
+      sh.args = ANSIBLE_PATH
+    end
+  else
+    config.vm.provision :ansible do |ansible|
+      ansible.playbook = File.join(ANSIBLE_PATH, 'dev.yml')
+      ansible.groups = {
+        'web' => ['default'],
+        'development' => ['default']
+      }
+
+      if vars = ENV['ANSIBLE_VARS']
+        extra_vars = Hash[vars.split(',').map { |pair| pair.split('=') }]
+        ansible.extra_vars = extra_vars
+      end
+    end
   end
 
   config.vm.provider 'virtualbox' do |vb|
@@ -77,6 +91,10 @@ Vagrant.configure('2') do |config|
     vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
     vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
   end
+end
+
+def local_site_path(site)
+  File.expand_path(site['local_path'], ANSIBLE_PATH)
 end
 
 def nfs_path(site_name)
